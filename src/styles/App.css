@@ -1,0 +1,259 @@
+/* App-specific styles */
+
+.hero-section {
+  @apply relative overflow-hidden bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900 dark:to-primary-800 py-20;
+}
+
+.hero-content {
+  @apply max-w-6xl mx-auto px-4;
+}
+
+.hero-title {
+  @apply text-4xl md:text-5xl lg:text-6xl font-bold text-primary-900 dark:text-white mb-4;
+}
+
+.hero-subtitle {
+  @apply text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-2xl;
+}
+
+.search-container {
+  @apply bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 mb-6;
+}
+
+.product-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+}
+
+.product-card-container {
+  @apply flex flex-col h-full;
+}
+
+.product-image-wrapper {
+  @apply relative w-full h-48 bg-gray-100 dark:bg-gray-700 rounded-t-lg overflow-hidden;
+}
+
+.product-image {
+  @apply w-full h-full object-cover;
+}
+
+.product-badge {
+  @apply absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-semibold;
+}
+
+.cheapest-badge {
+  @apply bg-green-500 text-white;
+}
+
+.limited-badge {
+  @apply bg-yellow-500 text-white;
+}
+
+.out-of-stock-badge {
+  @apply bg-red-500 text-white;
+}
+
+.price-tag {
+  @apply text-2xl md:text-3xl font-bold text-primary-700 dark:text-accent-300;
+}
+
+.compare-table {
+  @apply w-full border-collapse;
+}
+
+.compare-table th,
+.compare-table td {
+  @apply border border-gray-200 dark:border-gray-700 px-4 py-3 text-left;
+}
+
+.compare-table th {
+  @apply bg-primary-50 dark:bg-primary-900 font-semibold text-primary-900 dark:text-white;
+}
+
+.compare-table tr:nth-child(even) {
+  @apply bg-gray-50 dark:bg-slate-800;
+}
+
+.filter-section {
+  @apply sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto;
+}
+
+.filter-group {
+  @apply mb-6 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0;
+}
+
+.filter-label {
+  @apply block text-sm font-semibold text-gray-900 dark:text-white mb-3;
+}
+
+.filter-checkbox {
+  @apply w-4 h-4 rounded cursor-pointer;
+}
+
+.sort-dropdown {
+  @apply relative inline-block;
+}
+
+.favorite-btn {
+  @apply transition-colors duration-200;
+}
+
+.favorite-btn:hover {
+  @apply scale-110;
+}
+
+.favorite-btn.is-favorited {
+  @apply text-red-500;
+}
+
+.loading-spinner {
+  @apply inline-block w-5 h-5 border-2 border-current border-r-transparent rounded-full animate-spin;
+}
+
+.empty-state {
+  @apply flex flex-col items-center justify-center py-12 text-center;
+}
+
+.empty-state-icon {
+  @apply text-5xl mb-4;
+}
+
+.empty-state-title {
+  @apply text-xl font-semibold text-gray-900 dark:text-white mb-2;
+}
+
+.empty-state-description {
+  @apply text-gray-600 dark:text-gray-400 max-w-sm;
+}
+
+.recent-search-chip {
+  @apply inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors;
+}
+
+.trust-indicator {
+  @apply inline-flex items-center gap-1;
+}
+
+.trust-star {
+  @apply text-yellow-400;
+}
+
+.breadcrumb {
+  @apply flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4;
+}
+
+.breadcrumb-item {
+  @apply flex items-center gap-2;
+}
+
+.breadcrumb-separator {
+  @apply text-gray-400 dark:text-gray-600;
+}
+
+.breadcrumb-link {
+  @apply hover:text-primary-700 dark:hover:text-primary-300 transition-colors cursor-pointer;
+}
+
+.price-comparison {
+  @apply bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-lg p-4 mb-4;
+}
+
+.price-comparison-item {
+  @apply flex items-center justify-between py-2;
+}
+
+.store-link {
+  @apply text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-200 font-medium transition-colors;
+}
+
+.store-link:hover {
+  @apply underline;
+}
+
+.category-badge {
+  @apply inline-block px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200;
+}
+
+.divider {
+  @apply h-px bg-gray-200 dark:bg-gray-700 my-4;
+}
+
+.success-message {
+  @apply bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-100 px-4 py-3 rounded-lg;
+}
+
+.error-message {
+  @apply bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-100 px-4 py-3 rounded-lg;
+}
+
+.warning-message {
+  @apply bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-100 px-4 py-3 rounded-lg;
+}
+
+.info-message {
+  @apply bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-100 px-4 py-3 rounded-lg;
+}
+
+.no-print {
+  print: none;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .filter-section {
+    @apply sticky bottom-0 max-h-none overflow-visible;
+  }
+
+  .product-grid {
+    @apply grid-cols-1;
+  }
+
+  .hero-title {
+    @apply text-3xl md:text-4xl;
+  }
+}
+
+/* Dark mode specific adjustments */
+@media (prefers-color-scheme: dark) {
+  .input-field {
+    @apply dark:bg-slate-700 dark:border-gray-600 dark:text-white;
+  }
+
+  .card {
+    @apply dark:bg-slate-800 dark:text-white dark:border-gray-700;
+  }
+}
+
+/* Animation delays */
+.animate-delay-1 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-2 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-3 {
+  animation-delay: 0.3s;
+}
+
+/* Utility for truncating multi-line text */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
