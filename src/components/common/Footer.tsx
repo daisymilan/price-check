@@ -2,124 +2,111 @@
  * Footer Component
  */
 
-import { Mail, MapPin, Phone } from 'lucide-react';
+import { Tag, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  const navigate = useNavigate();
+  const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-primary-900 dark:bg-black text-white mt-16">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+    <footer className="bg-gray-900 dark:bg-gray-950 text-gray-400 mt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           {/* Brand */}
-          <div>
-            <h3 className="text-lg font-bold mb-3">PriceCheck</h3>
-            <p className="text-gray-300 text-sm">
-              Find the best prices for construction materials in the Philippines.
+          <div className="md:col-span-1">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+                <Tag size={14} className="text-white" />
+              </div>
+              <span className="text-white font-bold text-sm">PriceCheck PH</span>
+            </div>
+            <p className="text-sm leading-relaxed text-gray-500 mb-4">
+              Compare construction material prices from Philippine hardware stores
+              and online marketplaces — before you buy.
             </p>
+            <p className="text-xs text-gray-600">Prices shown for reference only.</p>
           </div>
 
-          {/* Quick Links */}
+          {/* Platform links */}
           <div>
-            <h4 className="font-semibold mb-3">Quick Links</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="/" className="text-gray-300 hover:text-white transition">
-                  Home
-                </a>
-              </li>
-              <li>
-                <a href="/search" className="text-gray-300 hover:text-white transition">
-                  Search Materials
-                </a>
-              </li>
-              <li>
-                <a href="/about" className="text-gray-300 hover:text-white transition">
-                  How It Works
-                </a>
-              </li>
-              <li>
-                <a href="/favorites" className="text-gray-300 hover:text-white transition">
-                  Saved Items
-                </a>
-              </li>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-300 mb-4">
+              Platform
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              {[
+                { label: 'Home', path: '/' },
+                { label: 'Browse Materials', path: '/search' },
+                { label: 'How It Works', path: '/about' },
+                { label: 'Saved Items', path: '/favorites' },
+              ].map((l) => (
+                <li key={l.path}>
+                  <button
+                    onClick={() => navigate(l.path)}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    {l.label}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Information */}
+          {/* Categories */}
           <div>
-            <h4 className="font-semibold mb-3">Information</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition">
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition">
-                  Disclaimer
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition">
-                  Terms & Conditions
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition">
-                  Privacy Policy
-                </a>
-              </li>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-300 mb-4">
+              Categories
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              {[
+                'Paint & Coating',
+                'Cement & Concrete',
+                'Tiles & Stone',
+                'Steel & Structural',
+                'Wood & Lumber',
+                'Plumbing',
+              ].map((c) => (
+                <li key={c}>
+                  <button
+                    onClick={() => navigate(`/search?category=${encodeURIComponent(c)}`)}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    {c}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Stores */}
           <div>
-            <h4 className="font-semibold mb-3">Contact Us</h4>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-start gap-2">
-                <Mail size={16} className="mt-1 flex-shrink-0" />
-                <span className="text-gray-300">support@pricecheck.ph</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Phone size={16} className="mt-1 flex-shrink-0" />
-                <span className="text-gray-300">1-800-PRICECHECK</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <MapPin size={16} className="mt-1 flex-shrink-0" />
-                <span className="text-gray-300">Metro Manila, Philippines</span>
-              </div>
-            </div>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-300 mb-4">
+              Covered Stores
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              {[
+                'Wilcon Depot',
+                'CW Home Depot',
+                'AllHome',
+                'Ace Hardware PH',
+                'Handyman',
+                'Shopee Philippines',
+                'Lazada Philippines',
+              ].map((s) => (
+                <li key={s}>
+                  <span className="flex items-center gap-1.5 text-gray-500">
+                    <ExternalLink size={10} className="flex-shrink-0" />
+                    {s}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-primary-800 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-gray-300 text-sm">
-              © {currentYear} PriceCheck Philippines. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4">
-              <a href="#" className="text-gray-300 hover:text-white transition">
-                Facebook
-              </a>
-              <a href="#" className="text-gray-300 hover:text-white transition">
-                Twitter
-              </a>
-              <a href="#" className="text-gray-300 hover:text-white transition">
-                Instagram
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Disclaimer */}
-        <div className="text-xs text-gray-400 pt-4 border-t border-primary-800">
-          <p>
-            PriceCheck is a price comparison tool. Prices and availability are subject
-            to change. Always verify directly with stores before making purchases. We
-            are not affiliated with any retailers shown.
-          </p>
+        <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600">
+          <p>© {year} PriceCheck PH. For informational purposes only.</p>
+          <p>Not affiliated with any listed store. Prices may vary.</p>
         </div>
       </div>
     </footer>

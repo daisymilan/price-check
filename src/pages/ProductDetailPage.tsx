@@ -1,19 +1,15 @@
 /**
- * Product Detail Page Component
+ * Product Detail Page
  */
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Heart, Bell, Share2 } from 'lucide-react';
+import { ArrowLeft, Heart, Bell, Share2, MapPin, Star, ExternalLink } from 'lucide-react';
 import PriceComparisonTable from '../components/product/PriceComparisonTable';
 import EmptyState from '../components/common/EmptyState';
 import { mockProducts } from '../data/mockData';
 import { ProductPrice } from '../types';
-import {
-  formatPriceWithSymbol,
-  getCategoryIcon,
-  normalizeProductName,
-} from '../utils/formatUtils';
+import { formatPriceWithSymbol, getCategoryIcon, normalizeProductName, formatDate } from '../utils/formatUtils';
 import { useFavorites } from '../hooks/useAppHooks';
 
 export default function ProductDetailPage() {
@@ -24,19 +20,15 @@ export default function ProductDetailPage() {
   const { toggleFavorite, isFav } = useFavorites();
 
   useEffect(() => {
-    // Find product by ID
     const found = mockProducts.find((p) => p.id === id);
     setProduct(found || null);
 
-    // Find related products (same category or similar name)
     if (found) {
       const related = mockProducts.filter(
         (p) =>
           p.id !== found.id &&
           (p.category === found.category ||
-            normalizeProductName(p.productName).includes(
-              normalizeProductName(found.brand)
-            ))
+            normalizeProductName(p.productName).includes(normalizeProductName(found.brand)))
       );
       setRelatedProducts(related.slice(0, 4));
     }
@@ -47,7 +39,7 @@ export default function ProductDetailPage() {
       <div className="min-h-screen flex items-center justify-center">
         <EmptyState
           title="Product Not Found"
-          description="The product you're looking for doesn't exist or has been removed."
+          description="This product doesn't exist or has been removed."
           actionLabel="Back to Search"
           onAction={() => navigate('/search')}
         />
@@ -55,292 +47,247 @@ export default function ProductDetailPage() {
     );
   }
 
-  // Get all variants of this product from different sources
   const allVariants = mockProducts.filter(
     (p) => p.normalizedProductName === product.normalizedProductName
   );
 
-  const cheapest = allVariants.reduce((min, p) =>
-    p.price < min.price ? p : min
-  );
+  const cheapest = allVariants.reduce((min, p) => (p.price < min.price ? p : min));
+  const favorited = isFav(product.id);
+  const savings = product.price - cheapest.price;
 
-  const isFavorite = isFav(product.id);
+  const availConfig = {
+    in_stock: { label: 'In Stock', cls: 'badge-green' },
+    limited: { label: 'Limited Stock', cls: 'badge-yellow' },
+    out_of_stock: { label: 'Out of Stock', cls: 'badge-red' },
+  };
+  const avail = availConfig[product.availability];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Back Button */}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
+        {/* Back */}
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 font-medium mb-6 transition"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
         >
-          <ArrowLeft size={18} />
-          Back
+          <ArrowLeft size={16} /> Back
         </button>
 
-        {/* Main Content */}
+        {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          {/* Product Image and Info */}
+
+          {/* Left: Image + actions */}
           <div className="lg:col-span-1">
-            <div className="card card-dark sticky top-24 overflow-hidden">
-              <div className="w-full aspect-square bg-gray-100 dark:bg-gray-700">
+            <div className="card sticky top-24 overflow-hidden">
+              {/* Image */}
+              <div className="relative h-64 sm:h-72 bg-gray-100 dark:bg-gray-700 overflow-hidden">
                 <img
                   src={product.imageUrl}
                   alt={product.productName}
                   className="w-full h-full object-cover"
                 />
+                <div className="absolute top-3 left-3">
+                  <span className={avail.cls}>{avail.label}</span>
+                </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-5">
                 {/* Category */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">{getCategoryIcon(product.category)}</span>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">{getCategoryIcon(product.category)}</span>
                   <span className="category-badge">{product.category}</span>
                 </div>
 
-                {/* Product Details */}
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                {/* Name */}
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                   {product.productName}
                 </h1>
-
-                <div className="space-y-2 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                  <p className="text-sm">
-                    <span className="font-semibold text-gray-700 dark:text-gray-300">Brand:</span>
-                    <span className="text-gray-600 dark:text-gray-400 ml-2">{product.brand}</span>
-                  </p>
-                  {product.variant && (
-                    <p className="text-sm">
-                      <span className="font-semibold text-gray-700 dark:text-gray-300">
-                        Variant:
-                      </span>
-                      <span className="text-gray-600 dark:text-gray-400 ml-2">
-                        {product.variant}
-                      </span>
-                    </p>
-                  )}
-                  {product.size && (
-                    <p className="text-sm">
-                      <span className="font-semibold text-gray-700 dark:text-gray-300">Size:</span>
-                      <span className="text-gray-600 dark:text-gray-400 ml-2">{product.size}</span>
-                    </p>
-                  )}
-                  <p className="text-sm">
-                    <span className="font-semibold text-gray-700 dark:text-gray-300">Unit:</span>
-                    <span className="text-gray-600 dark:text-gray-400 ml-2">{product.unit}</span>
-                  </p>
-                </div>
-
-                {/* Price Highlight */}
-                <div className="bg-primary-50 dark:bg-primary-900 rounded-lg p-4 mb-4">
-                  <p className="text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase mb-1">
-                    At {product.sourceName}
-                  </p>
-                  <p className="price-tag">{formatPriceWithSymbol(product.price)}</p>
-                  <p className="text-xs text-primary-600 dark:text-primary-400 mt-2">
-                    {product.availability === 'in_stock'
-                      ? '✓ In Stock'
-                      : '⚠ Limited Stock'}
-                  </p>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                  <button
-                    onClick={() => toggleFavorite(product)}
-                    className={`w-full py-2 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${
-                      isFavorite
-                        ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    <Heart
-                      size={18}
-                      className={isFavorite ? 'fill-current' : ''}
-                    />
-                    {isFavorite ? 'Saved' : 'Save to Favorites'}
-                  </button>
-
-                  <button className="w-full btn-secondary dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 flex items-center justify-center gap-2">
-                    <Share2 size={18} />
-                    Share
-                  </button>
-
-                  <button className="w-full btn-secondary dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 flex items-center justify-center gap-2">
-                    <Bell size={18} />
-                    Notify on Price Drop
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Product Details */}
-          <div className="lg:col-span-2">
-            {/* Price Comparison Section */}
-            <div className="card card-dark p-6 mb-8">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                Price Comparison (All Sources)
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                {allVariants.length} seller{allVariants.length !== 1 ? 's' : ''} offering
-                this product
-              </p>
-              <PriceComparisonTable products={allVariants} cheapest={cheapest} />
-            </div>
-
-            {/* Product Specs */}
-            <div className="card card-dark p-6 mb-8">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                Product Information
-              </h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                      Category
-                    </p>
-                    <p className="text-gray-900 dark:text-white">{product.category}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                      Brand
-                    </p>
-                    <p className="text-gray-900 dark:text-white">{product.brand}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                      Unit
-                    </p>
-                    <p className="text-gray-900 dark:text-white">{product.unit}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                      Availability
-                    </p>
-                    <p className="text-gray-900 dark:text-white capitalize">
-                      {product.availability.replace('_', ' ')}
-                    </p>
-                  </div>
-                </div>
-
-                {product.sku && (
-                  <div>
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                      SKU
-                    </p>
-                    <p className="text-gray-900 dark:text-white font-mono">{product.sku}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Savings Info */}
-            {cheapest && cheapest.id !== product.id && (
-              <div className="card card-dark p-6 mb-8 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700">
-                <h3 className="text-lg font-bold text-green-900 dark:text-green-100 mb-2">
-                  💰 Potential Savings
-                </h3>
-                <p className="text-green-800 dark:text-green-200">
-                  You could save ₱
-                  {(product.price - cheapest.price).toLocaleString()} by purchasing from{' '}
-                  <strong>{cheapest.sourceName}</strong>, which offers the same product at{' '}
-                  <strong>{formatPriceWithSymbol(cheapest.price)}</strong>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  by {product.brand}
+                  {product.size && <> · {product.size}</>}
+                  {product.variant && <> · {product.variant}</>}
                 </p>
-              </div>
-            )}
 
-            {/* Store Info */}
-            <div className="card card-dark p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                Seller Information
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                    Store
+                {/* Price highlight */}
+                <div className="bg-primary-50 dark:bg-primary-900/30 border border-primary-100 dark:border-primary-800 rounded-xl p-4 mb-4">
+                  <p className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wide mb-1">
+                    at {product.sourceName}
                   </p>
-                  <p className="text-gray-900 dark:text-white font-semibold">
-                    {product.sourceName}
-                  </p>
+                  <p className="price-large">{formatPriceWithSymbol(product.price)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">per {product.unit}</p>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                    Location
-                  </p>
-                  <p className="text-gray-900 dark:text-white">{product.location}</p>
-                </div>
-                {product.trustRating && (
-                  <div>
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                      Trust Rating
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <span
-                            key={i}
-                            className={`${
-                              i < Math.round(product.trustRating!)
-                                ? 'text-yellow-400'
-                                : 'text-gray-300'
-                            }`}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                      <span className="text-gray-600 dark:text-gray-400">
-                        {product.trustRating.toFixed(1)}/5.0
-                      </span>
-                    </div>
+
+                {/* Store info */}
+                <div className="flex items-center justify-between mb-4 text-sm">
+                  <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+                    <MapPin size={13} />
+                    {product.location}
                   </div>
-                )}
-                <div>
+                  {product.trustRating && (
+                    <div className="flex items-center gap-1">
+                      <Star size={12} className="text-amber-400 fill-amber-400" />
+                      <span className="text-xs text-gray-500">{product.trustRating}/5</span>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-xs text-gray-400 mb-4">
+                  Updated {formatDate(product.lastUpdated)}
+                </p>
+
+                {/* Actions */}
+                <div className="space-y-2.5">
                   <a
                     href={product.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm btn-primary inline-block"
+                    className="btn-primary w-full justify-center"
                   >
-                    Visit Store
+                    <ExternalLink size={14} /> Visit Store
                   </a>
+
+                  <button
+                    onClick={() => toggleFavorite(product)}
+                    className={`btn-secondary w-full justify-center ${
+                      favorited ? 'border-red-200 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100' : ''
+                    }`}
+                  >
+                    <Heart size={14} className={favorited ? 'fill-current' : ''} />
+                    {favorited ? 'Saved' : 'Save to Favorites'}
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button className="btn-secondary justify-center">
+                      <Share2 size={13} /> Share
+                    </button>
+                    {/* Future: price alert feature */}
+                    <button
+                      className="btn-secondary justify-center opacity-70 cursor-not-allowed"
+                      title="Coming soon"
+                      disabled
+                    >
+                      <Bell size={13} /> Alert
+                    </button>
+                  </div>
+                </div>
+
+                {/* Notify placeholder */}
+                <div className="notify-bar mt-3 text-xs text-amber-800 dark:text-amber-300">
+                  <span className="font-semibold">Coming soon:</span> Get notified when the price drops.
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Right: Comparison + specs */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Savings highlight */}
+            {savings > 0 && cheapest.id !== product.id && (
+              <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                <div>
+                  <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1">
+                    💰 Potential Savings
+                  </p>
+                  <p className="text-base text-emerald-800 dark:text-emerald-200">
+                    You could save{' '}
+                    <strong>{formatPriceWithSymbol(savings)}</strong> by purchasing
+                    from <strong>{cheapest.sourceName}</strong> at{' '}
+                    <strong>{formatPriceWithSymbol(cheapest.price)}</strong>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Price comparison */}
+            <div className="card p-6">
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Price Comparison
+                </h2>
+                <span className="badge-gray">{allVariants.length} seller{allVariants.length !== 1 ? 's' : ''}</span>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+                All stores offering this product, sorted by price
+              </p>
+              <PriceComparisonTable products={allVariants} cheapest={cheapest} />
+            </div>
+
+            {/* Product specs */}
+            <div className="card p-6">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">
+                Product Information
+              </h3>
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
+                {[
+                  { label: 'Category', value: product.category },
+                  { label: 'Brand', value: product.brand },
+                  { label: 'Unit', value: product.unit },
+                  { label: 'Size', value: product.size || '—' },
+                  { label: 'Variant', value: product.variant || '—' },
+                  { label: 'Availability', value: product.availability.replace('_', ' ') },
+                  ...(product.sku ? [{ label: 'SKU', value: product.sku }] : []),
+                ].map((item) => (
+                  <div key={item.label}>
+                    <dt className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
+                      {item.label}
+                    </dt>
+                    <dd className="text-sm text-gray-800 dark:text-white capitalize">
+                      {item.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {/* Price trend placeholder */}
+            <div className="card p-6 border-dashed border-2 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="badge-gray">Coming Soon</span>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Price History & Trend
+              </h3>
+              <p className="text-sm text-gray-400">
+                Track how this product's price changes over time. Integrate with
+                a scraper service and Supabase to enable this feature.
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Related Products */}
+        {/* Related products */}
         {relatedProducts.length > 0 && (
           <section>
             <h2 className="section-title">Similar Products</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {relatedProducts.map((prod) => (
-                <div
+                <button
                   key={prod.id}
                   onClick={() => navigate(`/product/${prod.id}`)}
-                  className="card card-dark p-4 cursor-pointer hover:shadow-lg transition"
+                  className="product-card text-left group"
                 >
-                  <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg mb-4 overflow-hidden">
+                  <div className="h-36 bg-gray-100 dark:bg-gray-700 overflow-hidden">
                     <img
                       src={prod.imageUrl}
                       alt={prod.productName}
-                      className="w-full h-full object-cover hover:scale-105 transition"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <p className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase mb-1">
-                    {prod.brand}
-                  </p>
-                  <h3 className="font-bold text-gray-900 dark:text-white line-clamp-2 mb-2">
-                    {prod.productName}
-                  </h3>
-                  <p className="text-lg font-bold text-primary-700 dark:text-accent-300 mb-1">
-                    {formatPriceWithSymbol(prod.price)}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    from {prod.sourceName}
-                  </p>
-                </div>
+                  <div className="p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400 mb-0.5">
+                      {prod.brand}
+                    </p>
+                    <h3 className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-2 mb-2">
+                      {prod.productName}
+                    </h3>
+                    <p className="font-bold text-primary-600 dark:text-primary-400 text-sm">
+                      {formatPriceWithSymbol(prod.price)}
+                    </p>
+                    <p className="text-[10px] text-gray-400">{prod.sourceName}</p>
+                  </div>
+                </button>
               ))}
             </div>
           </section>

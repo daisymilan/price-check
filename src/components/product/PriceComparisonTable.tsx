@@ -19,57 +19,55 @@ interface PriceComparisonTableProps {
   cheapest?: ProductPrice | null;
 }
 
-export default function PriceComparisonTable({
-  products,
-  cheapest,
-}: PriceComparisonTableProps) {
-  const sortedProducts = [...products].sort((a, b) => a.price - b.price);
+export default function PriceComparisonTable({ products, cheapest }: PriceComparisonTableProps) {
+  const sorted = [...products].sort((a, b) => a.price - b.price);
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <table className="compare-table w-full">
         <thead>
           <tr>
-            <th className="text-left min-w-[200px]">Store</th>
-            <th className="text-center min-w-[120px]">Price</th>
-            <th className="text-center min-w-[100px]">Difference</th>
-            <th className="text-center min-w-[100px]">Rating</th>
-            <th className="text-center min-w-[120px]">Status</th>
-            <th className="text-center min-w-[100px]">Updated</th>
-            <th className="text-center min-w-[80px]">Link</th>
+            <th style={{ minWidth: 200 }}>Store</th>
+            <th className="text-right" style={{ minWidth: 120 }}>Price</th>
+            <th className="text-center" style={{ minWidth: 110 }}>vs. Best</th>
+            <th className="text-center" style={{ minWidth: 90 }}>Rating</th>
+            <th className="text-center" style={{ minWidth: 110 }}>Status</th>
+            <th className="text-center" style={{ minWidth: 90 }}>Updated</th>
+            <th className="text-center" style={{ minWidth: 60 }}>Link</th>
           </tr>
         </thead>
         <tbody>
-          {sortedProducts.map((product) => {
+          {sorted.map((product) => {
             const isCheapest = cheapest && product.id === cheapest.id;
             return (
-              <tr key={product.id} className={isCheapest ? 'bg-green-50 dark:bg-green-900' : ''}>
-                {/* Store Name */}
+              <tr
+                key={product.id}
+                className={isCheapest ? 'cheapest-row' : ''}
+              >
+                {/* Store */}
                 <td>
                   <div className="flex items-start gap-2">
                     {isCheapest && (
                       <CheckCircle
-                        size={18}
-                        className="text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0"
+                        size={15}
+                        className="text-emerald-500 dark:text-emerald-400 mt-0.5 flex-shrink-0"
                       />
                     )}
                     <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm">
                         {product.sourceName}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {product.location}
-                      </p>
+                      <p className="text-xs text-gray-400">{product.location}</p>
                     </div>
                   </div>
                 </td>
 
                 {/* Price */}
-                <td className="text-center">
+                <td className="text-right">
                   <p
-                    className={`text-lg font-bold ${
+                    className={`text-base font-bold ${
                       isCheapest
-                        ? 'text-green-700 dark:text-green-300'
+                        ? 'text-emerald-700 dark:text-emerald-400'
                         : 'text-gray-900 dark:text-white'
                     }`}
                   >
@@ -77,12 +75,12 @@ export default function PriceComparisonTable({
                   </p>
                 </td>
 
-                {/* Difference */}
+                {/* Diff */}
                 <td className="text-center">
                   {isCheapest ? (
-                    <span className="badge badge-success">Cheapest</span>
+                    <span className="badge-green text-[10px]">Best Price</span>
                   ) : (
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       {formatPriceDifference(product.price, cheapest?.price || product.price)}
                     </span>
                   )}
@@ -91,40 +89,42 @@ export default function PriceComparisonTable({
                 {/* Rating */}
                 <td className="text-center">
                   {product.trustRating ? (
-                    <div className="flex flex-col items-center">
-                      <div className="flex gap-0.5 mb-1">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="flex gap-0.5">
                         {[...Array(5)].map((_, i) => (
                           <span
                             key={i}
-                            className={`text-sm ${
+                            className={`text-xs ${
                               i < Math.round(product.trustRating!)
-                                ? 'text-yellow-400'
-                                : 'text-gray-300'
+                                ? 'text-amber-400'
+                                : 'text-gray-200 dark:text-gray-600'
                             }`}
                           >
                             ★
                           </span>
                         ))}
                       </div>
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                      <span className="text-[10px] text-gray-400">
                         {getTrustRatingBadge(product.trustRating)}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">N/A</span>
+                    <span className="text-xs text-gray-400">—</span>
                   )}
                 </td>
 
                 {/* Availability */}
                 <td className="text-center">
-                  <span className={`badge text-xs ${getAvailabilityColor(product.availability)}`}>
+                  <span className={`badge text-[10px] ${getAvailabilityColor(product.availability)}`}>
                     {getAvailabilityBadge(product.availability)}
                   </span>
                 </td>
 
-                {/* Last Updated */}
-                <td className="text-center text-sm text-gray-600 dark:text-gray-400">
-                  {formatDate(product.lastUpdated)}
+                {/* Updated */}
+                <td className="text-center">
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    {formatDate(product.lastUpdated)}
+                  </span>
                 </td>
 
                 {/* Link */}
@@ -133,10 +133,10 @@ export default function PriceComparisonTable({
                     href={ensureHttp(product.sourceUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition"
-                    title="Open store link"
+                    className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 dark:hover:text-primary-400 transition-all"
+                    title="Open store"
                   >
-                    <ExternalLink size={16} />
+                    <ExternalLink size={14} />
                   </a>
                 </td>
               </tr>

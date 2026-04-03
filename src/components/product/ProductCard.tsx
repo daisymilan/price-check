@@ -1,8 +1,8 @@
 /**
- * Product Card Component
+ * Product Card Component — Grid card for search results and listings
  */
 
-import { Heart, ExternalLink } from 'lucide-react';
+import { Heart, ExternalLink, MapPin, Star } from 'lucide-react';
 import { ProductPrice } from '../../types';
 import { formatPriceWithSymbol, formatDate } from '../../utils/formatUtils';
 import { useNavigate } from 'react-router-dom';
@@ -20,132 +20,127 @@ export default function ProductCard({
   onFavoriteClick,
 }: ProductCardProps) {
   const navigate = useNavigate();
-  const { isFav } = useFavorites();
+  const { isFav, toggleFavorite } = useFavorites();
+  const favorited = isFav(product.id);
 
-  const handleCardClick = () => {
-    navigate(`/product/${product.id}`);
+  const handleFav = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onFavoriteClick) {
+      onFavoriteClick();
+    } else {
+      toggleFavorite(product);
+    }
   };
 
-  const isLimited = product.availability === 'limited';
-  const isOutOfStock = product.availability === 'out_of_stock';
-
   return (
-    <div
-      className="card card-dark flex flex-col h-full hover:shadow-xl transition-shadow cursor-pointer group"
-      onClick={handleCardClick}
+    <article
+      className="product-card group"
+      onClick={() => navigate(`/product/${product.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && navigate(`/product/${product.id}`)}
     >
-      {/* Image Container */}
-      <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-700 overflow-hidden rounded-t-xl">
+      {/* Image */}
+      <div className="relative h-44 bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0">
         <img
           src={product.imageUrl}
           alt={product.productName}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
 
-        {/* Badges */}
-        <div className="absolute top-3 right-3 flex flex-col gap-2">
+        {/* Top-left badges */}
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
           {isCheapest && (
-            <div className="cheapest-badge px-3 py-1 rounded-full text-xs font-bold shadow">
-              Best Price
-            </div>
+            <span className="best-price-badge">★ Pinakamura</span>
           )}
-          {isLimited && (
-            <div className="limited-badge px-3 py-1 rounded-full text-xs font-bold shadow">
-              Limited
-            </div>
+          {product.availability === 'limited' && (
+            <span className="badge-yellow" style={{ fontSize: '10px' }}>Limited</span>
           )}
-          {isOutOfStock && (
-            <div className="out-of-stock-badge px-3 py-1 rounded-full text-xs font-bold shadow">
-              Out of Stock
-            </div>
+          {product.availability === 'out_of_stock' && (
+            <span className="badge-red" style={{ fontSize: '10px' }}>Out of Stock</span>
           )}
         </div>
 
-        {/* Favorite Button */}
+        {/* Favorite button */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onFavoriteClick?.();
-          }}
-          className="favorite-btn absolute bottom-3 right-3 p-2 bg-white dark:bg-slate-700 rounded-full shadow-md hover:bg-red-50 dark:hover:bg-slate-600 transition"
-          title="Add to favorites"
+          onClick={handleFav}
+          className={`absolute top-2.5 right-2.5 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-150 ${
+            favorited
+              ? 'bg-red-500 text-white shadow-md'
+              : 'bg-white/90 dark:bg-gray-800/90 text-gray-400 hover:bg-white hover:text-red-500 shadow-sm'
+          }`}
+          title={favorited ? 'Remove from saved' : 'Save item'}
         >
-          <Heart
-            size={18}
-            className={isFav(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-400'}
-          />
+          <Heart size={13} className={favorited ? 'fill-current' : ''} />
         </button>
       </div>
 
       {/* Content */}
-      <div className="flex-grow flex flex-col p-4">
+      <div className="flex flex-col flex-1 p-4">
         {/* Brand */}
-        <p className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wide mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400 mb-1">
           {product.brand}
         </p>
 
         {/* Product Name */}
-        <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 hover:text-primary-700 dark:hover:text-primary-400">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2 leading-snug group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors">
           {product.productName}
         </h3>
 
-        {/* Variant/Size */}
+        {/* Variant / Size */}
         {(product.variant || product.size) && (
-          <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-            {product.variant && <span>{product.variant}</span>}
-            {product.variant && product.size && <span> • </span>}
-            {product.size && <span>{product.size}</span>}
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-2.5">
+            {[product.variant, product.size].filter(Boolean).join(' · ')}
           </p>
         )}
 
         {/* Price */}
         <div className="mb-3">
           <p className="price-tag">{formatPriceWithSymbol(product.price)}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">per {product.unit}</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">per {product.unit}</p>
         </div>
 
-        {/* Store Info */}
-        <div className="flex items-start justify-between gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex-grow">
-            <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+        {/* Divider */}
+        <div className="divider mb-3" />
+
+        {/* Store info */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div>
+            <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
               {product.sourceName}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{product.location}</p>
+            <p className="flex items-center gap-0.5 mt-0.5" style={{ fontSize: '10px', color: '#94a3b8' }}>
+              <MapPin size={9} />
+              {product.location}
+            </p>
           </div>
           {product.trustRating && (
-            <div className="flex items-center gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <span
-                  key={i}
-                  className={`text-xs ${
-                    i < Math.round(product.trustRating!)
-                      ? 'text-yellow-400'
-                      : 'text-gray-300'
-                  }`}
-                >
-                  ★
-                </span>
-              ))}
+            <div className="flex items-center gap-0.5 flex-shrink-0 mt-0.5">
+              <Star size={10} className="text-amber-400 fill-amber-400" />
+              <span className="text-gray-500 dark:text-gray-400" style={{ fontSize: '10px' }}>
+                {product.trustRating}
+              </span>
             </div>
           )}
         </div>
 
-        {/* Last Updated */}
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+        <p className="text-gray-400 dark:text-gray-500 mb-3" style={{ fontSize: '10px' }}>
           Updated {formatDate(product.lastUpdated)}
         </p>
 
-        {/* Store Link */}
+        {/* Store link */}
         <a
           href={product.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition mt-auto"
+          className="mt-auto inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300 hover:border-primary-300 hover:text-primary-600 dark:hover:border-primary-700 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all"
         >
-          View at Store <ExternalLink size={14} />
+          Visit Store <ExternalLink size={11} />
         </a>
       </div>
-    </div>
+    </article>
   );
 }

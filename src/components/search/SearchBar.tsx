@@ -1,9 +1,9 @@
 /**
- * Search Bar Component
+ * SearchBar — Compact search bar for results page
  */
 
-import { useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Search, X, Clock } from 'lucide-react';
 import { useRecentSearches } from '../../hooks/useAppHooks';
 
 interface SearchBarProps {
@@ -19,80 +19,99 @@ export default function SearchBar({
   initialQuery = '',
   showRecent = true,
   autoFocus = false,
-  placeholder = 'Search materials... (e.g., paint, cement, tiles)',
+  placeholder = 'Search materials... (e.g. cement, paint, tiles)',
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
-  const [showRecentDropdown, setShowRecentDropdown] = useState(false);
+  const [open, setOpen] = useState(false);
   const { recentSearches } = useRecentSearches();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Update query if initialQuery prop changes (e.g. from URL)
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
       onSearch(query.trim());
-      setShowRecentDropdown(false);
+      setOpen(false);
     }
   };
 
-  const handleRecentClick = (searchQuery: string) => {
-    setQuery(searchQuery);
-    onSearch(searchQuery);
-    setShowRecentDropdown(false);
+  const pick = (q: string) => {
+    setQuery(q);
+    onSearch(q);
+    setOpen(false);
   };
 
-  const handleClear = () => {
+  const clear = () => {
     setQuery('');
-    setShowRecentDropdown(false);
+    inputRef.current?.focus();
   };
+
+  const showDropdown = open && showRecent && recentSearches.length > 0 && !query;
 
   return (
-    <div className="relative w-full">
-      <form onSubmit={handleSubmit} className="relative">
+    <div ref={containerRef} className="relative w-full">
+      <form onSubmit={handleSubmit}>
         <div className="relative flex items-center">
           <Search
-            size={20}
-            className="absolute left-4 text-gray-400 dark:text-gray-500 pointer-events-none"
+            size={16}
+            className="absolute left-3.5 text-gray-400 pointer-events-none"
           />
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => showRecent && setShowRecentDropdown(true)}
-            onBlur={() => setShowRecentDropdown(false)}
+            onFocus={() => setOpen(true)}
             placeholder={placeholder}
             autoFocus={autoFocus}
-            className="input-field pl-12 pr-10 text-base dark:bg-slate-700 dark:border-gray-600 dark:text-white"
+            className="input pl-10 pr-10 h-10"
           />
           {query && (
             <button
               type="button"
-              onClick={handleClear}
-              className="absolute right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+              onClick={clear}
+              className="absolute right-3 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
             >
-              <X size={18} />
+              <X size={14} />
             </button>
           )}
         </div>
       </form>
 
-      {/* Recent Searches Dropdown */}
-      {showRecentDropdown && recentSearches.length > 0 && showRecent && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10">
-          <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-            <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">
+      {/* Recent searches dropdown */}
+      {showDropdown && (
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden animate-slide-down">
+          <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
               Recent Searches
             </p>
           </div>
-          <ul className="max-h-64 overflow-y-auto">
-            {recentSearches.map((search) => (
-              <li key={search.id}>
+          <ul className="max-h-52 overflow-y-auto">
+            {recentSearches.map((s) => (
+              <li key={s.id}>
                 <button
-                  onClick={() => handleRecentClick(search.query)}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-700 transition flex items-center gap-2"
+                  type="button"
+                  onMouseDown={(e) => { e.preventDefault(); pick(s.query); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
                 >
-                  <Search size={14} className="text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {search.query}
-                  </span>
+                  <Clock size={12} className="text-gray-300 dark:text-gray-500 flex-shrink-0" />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{s.query}</span>
                 </button>
               </li>
             ))}

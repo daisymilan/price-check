@@ -2,30 +2,38 @@
  * Empty State Component
  */
 
-import { Search } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface EmptyStateProps {
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   title: string;
-  description: string;
+  description?: string;
   actionLabel?: string;
   onAction?: () => void;
 }
 
 export default function EmptyState({
-  icon = <Search size={48} />,
+  icon,
   title,
   description,
   actionLabel,
   onAction,
 }: EmptyStateProps) {
   return (
-    <div className="empty-state">
-      <div className="empty-state-icon">{icon}</div>
-      <h3 className="empty-state-title">{title}</h3>
-      <p className="empty-state-description">{description}</p>
+    <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+      {icon && (
+        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mb-5 text-gray-300 dark:text-gray-600">
+          {icon}
+        </div>
+      )}
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">{title}</h3>
+      {description && (
+        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-6 leading-relaxed">
+          {description}
+        </p>
+      )}
       {actionLabel && onAction && (
-        <button onClick={onAction} className="btn-primary mt-6">
+        <button onClick={onAction} className="btn-secondary">
           {actionLabel}
         </button>
       )}

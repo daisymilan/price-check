@@ -1,161 +1,149 @@
 /**
- * Favorites Page Component
+ * Favorites Page
  */
 
 import { useNavigate } from 'react-router-dom';
-import { Heart, Trash2, ArrowRight } from 'lucide-react';
+import { Heart, Trash2, ArrowRight, Search } from 'lucide-react';
 import { useFavorites } from '../hooks/useAppHooks';
 import { mockProducts } from '../data/mockData';
 import EmptyState from '../components/common/EmptyState';
-import {
-  formatPriceWithSymbol,
-  getCategoryIcon,
-  formatDate,
-} from '../utils/formatUtils';
+import { formatPriceWithSymbol, getCategoryIcon, formatDate } from '../utils/formatUtils';
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
-  const { favorites } = useFavorites();
+  const { favorites, toggleFavorite } = useFavorites();
 
   if (favorites.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="max-w-md text-center">
-          <EmptyState
-            icon={<Heart size={64} className="text-gray-300 dark:text-gray-700 mx-auto" />}
-            title="No Saved Items Yet"
-            description="Start saving your favorite construction materials to compare prices and track deals."
-            actionLabel="Browse Materials"
-            onAction={() => navigate('/search')}
-          />
-        </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
+        <EmptyState
+          icon={<Heart size={36} />}
+          title="No Saved Items Yet"
+          description="Save construction materials you're interested in to track prices and compare options."
+          actionLabel="Browse Materials"
+          onAction={() => navigate('/search')}
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="section-title">Saved Items</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            You have {favorites.length} saved item{favorites.length !== 1 ? 's' : ''}
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <p className="section-label">Your List</p>
+            <h1 className="section-title mb-0">Saved Items</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {favorites.length} saved item{favorites.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/search')}
+            className="btn-primary"
+          >
+            <Search size={14} /> Browse More
+          </button>
         </div>
 
-        {/* Favorites List */}
-        <div className="space-y-4">
-          {favorites.map((favorite) => {
-            // Find all products with this name in mock data
+        {/* Favorites list */}
+        <div className="space-y-3 mb-12">
+          {favorites.map((fav) => {
             const allPrices = mockProducts.filter((p) =>
-              p.productName.toLowerCase().includes(favorite.productName.toLowerCase())
+              p.productName.toLowerCase().includes(fav.productName.toLowerCase())
             );
-            const cheapest = allPrices.length > 0 ? allPrices[0] : null;
-            const savings = cheapest && cheapest.price < favorite.price
-              ? favorite.price - cheapest.price
+            const cheapest = allPrices.length > 0
+              ? allPrices.reduce((min, p) => (p.price < min.price ? p : min))
+              : null;
+            const savings = cheapest && cheapest.price < fav.price
+              ? fav.price - cheapest.price
               : 0;
 
+            const product = mockProducts.find((p) => p.id === fav.id);
+
             return (
-              <div
-                key={favorite.id}
-                className="card card-dark p-6 hover:shadow-lg transition"
-              >
-                <div className="flex flex-col sm:flex-row gap-6">
+              <div key={fav.id} className="card p-5">
+                <div className="flex flex-col sm:flex-row gap-4">
                   {/* Image */}
-                  <div className="sm:w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-full sm:w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden flex-shrink-0">
                     <img
-                      src={favorite.imageUrl}
-                      alt={favorite.productName}
+                      src={fav.imageUrl}
+                      alt={fav.productName}
                       className="w-full h-full object-cover"
                     />
                   </div>
 
                   {/* Content */}
-                  <div className="flex-grow">
-                    <div className="flex items-start justify-between gap-4 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3 mb-1">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span>{getCategoryIcon(favorite.category)}</span>
-                          <span className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase">
-                            {favorite.category}
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span>{getCategoryIcon(fav.category)}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400">
+                            {fav.category}
                           </span>
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-400 cursor-pointer">
-                          {favorite.productName}
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                          {fav.productName}
                         </h3>
                       </div>
+
                       <button
-                        onClick={() => {
-                          const fav = favorites.find((f) => f.id === favorite.id);
-                          if (fav) {
-                            const product = mockProducts.find((p) => p.id === favorite.id);
-                            if (product) {
-                              // Handle removal
-                            }
-                          }
-                        }}
-                        className="text-red-500 hover:text-red-700 transition"
-                        title="Remove from favorites"
+                        onClick={() => product && toggleFavorite(product)}
+                        className="flex-shrink-0 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                        title="Remove from saved"
                       >
-                        <Trash2 size={20} />
+                        <Trash2 size={16} />
                       </button>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 text-sm mb-3">
+                    {/* Prices row */}
+                    <div className="flex flex-wrap items-center gap-5 mb-2">
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">Saved Price</p>
-                        <p className="price-tag">{formatPriceWithSymbol(favorite.price)}</p>
+                        <p className="text-[10px] text-gray-400 mb-0.5">Saved Price</p>
+                        <p className="price-tag">{formatPriceWithSymbol(fav.price)}</p>
                       </div>
 
-                      {cheapest && cheapest.price < favorite.price && (
+                      {cheapest && cheapest.price < fav.price && (
                         <div>
-                          <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">
-                            Current Best Price
-                          </p>
-                          <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                          <p className="text-[10px] text-gray-400 mb-0.5">Current Best</p>
+                          <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                             {formatPriceWithSymbol(cheapest.price)}
                           </p>
                         </div>
                       )}
 
                       {savings > 0 && (
-                        <div>
-                          <p className="text-gray-600 dark:text-gray-400 text-xs mb-1">Potential Saving</p>
-                          <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                            -₱{savings.toLocaleString()}
-                          </p>
+                        <div className="badge-green text-xs px-2.5 py-1 self-end mb-0.5">
+                          Save {formatPriceWithSymbol(savings)}
                         </div>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        from <strong>{favorite.source}</strong>
-                      </span>
-                      <span className="text-gray-400">•</span>
-                      <span className="text-gray-500 dark:text-gray-500 text-xs">
-                        Saved {formatDate(favorite.savedAt)}
-                      </span>
-                    </div>
+                    <p className="text-xs text-gray-400">
+                      from <span className="font-medium text-gray-600 dark:text-gray-300">{fav.source}</span>
+                      {' · '}Saved {formatDate(fav.savedAt)}
+                    </p>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex sm:flex-col gap-2">
+                  <div className="flex sm:flex-col gap-2 sm:w-32 flex-shrink-0">
                     <button
-                      onClick={() => navigate(`/search?q=${encodeURIComponent(favorite.productName)}`)}
-                      className="flex-1 sm:flex-none btn-primary flex items-center justify-center gap-2"
+                      onClick={() => navigate(`/search?q=${encodeURIComponent(fav.productName)}`)}
+                      className="btn-primary flex-1 sm:flex-none justify-center text-xs"
                     >
-                      Compare <ArrowRight size={14} />
+                      Compare <ArrowRight size={12} />
                     </button>
-                    <a
-                      href={`https://www.google.com/search?q=${encodeURIComponent(favorite.productName)} ${encodeURIComponent(favorite.source)} price`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 sm:flex-none btn-secondary dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 text-center"
-                    >
-                      Check Price
-                    </a>
+                    {product && (
+                      <button
+                        onClick={() => navigate(`/product/${product.id}`)}
+                        className="btn-secondary flex-1 sm:flex-none justify-center text-xs"
+                      >
+                        Details
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -163,14 +151,28 @@ export default function FavoritesPage() {
           })}
         </div>
 
-        {/* Tips Section */}
-        <div className="mt-12 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
-          <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-3">💡 Pro Tips</h3>
-          <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-            <li>✓ Regularly check saved items to monitor price changes</li>
-            <li>✓ Compare prices across different stores before purchasing</li>
-            <li>✓ Use the bulk comparison feature to check multiple items at once</li>
-            <li>✓ Enable price drop notifications to get alerts when items go on sale</li>
+        {/* Tips */}
+        <div className="card p-6 bg-primary-50/50 dark:bg-primary-900/10 border-primary-100 dark:border-primary-800">
+          <h3 className="font-semibold text-gray-800 dark:text-white mb-3 text-sm flex items-center gap-2">
+            💡 Tips for Smarter Buying
+          </h3>
+          <ul className="space-y-1.5 text-sm text-gray-600 dark:text-gray-400">
+            <li className="flex items-start gap-2">
+              <span className="text-primary-600 font-bold flex-shrink-0">→</span>
+              Check prices from multiple stores before committing to a purchase.
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary-600 font-bold flex-shrink-0">→</span>
+              Online prices (Shopee, Lazada) often include delivery — factor that in.
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary-600 font-bold flex-shrink-0">→</span>
+              Bulk orders at physical stores like Wilcon or CW Home Depot can offer discounts.
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary-600 font-bold flex-shrink-0">→</span>
+              Price alerts (coming soon) will notify you when saved items go on sale.
+            </li>
           </ul>
         </div>
       </div>
