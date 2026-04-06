@@ -5,13 +5,14 @@
 import { useNavigate } from 'react-router-dom';
 import { Heart, Trash2, ArrowRight, Search } from 'lucide-react';
 import { useFavorites } from '../hooks/useAppHooks';
-import { mockProducts } from '../data/mockData';
+import { getAllProducts } from '../utils/dbUtils';
 import EmptyState from '../components/common/EmptyState';
 import { formatPriceWithSymbol, getCategoryIcon, formatDate } from '../utils/formatUtils';
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
   const { favorites, toggleFavorite } = useFavorites();
+  const allProducts = getAllProducts();
 
   if (favorites.length === 0) {
     return (
@@ -51,7 +52,7 @@ export default function FavoritesPage() {
         {/* Favorites list */}
         <div className="space-y-3 mb-12">
           {favorites.map((fav) => {
-            const allPrices = mockProducts.filter((p) =>
+            const allPrices = allProducts.filter((p) =>
               p.productName.toLowerCase().includes(fav.productName.toLowerCase())
             );
             const cheapest = allPrices.length > 0
@@ -61,7 +62,7 @@ export default function FavoritesPage() {
               ? fav.price - cheapest.price
               : 0;
 
-            const product = mockProducts.find((p) => p.id === fav.id);
+            const product = allProducts.find((p) => p.id === fav.id);
 
             return (
               <div key={fav.id} className="card p-5">

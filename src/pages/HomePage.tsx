@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { TrendingUp, ArrowRight, Clock, Zap, Shield, Star, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { useRecentSearches } from '../hooks/useAppHooks';
-import { mockProducts, categories } from '../data/mockData';
+import { getAllProducts, getCategories } from '../utils/dbUtils';
 import { formatPriceWithSymbol } from '../utils/formatUtils';
 
 const POPULAR_SEARCHES = [
@@ -57,8 +57,10 @@ export default function HomePage() {
     handleSearch(searchQuery);
   };
 
-  const featuredProducts = mockProducts.slice(0, 6);
-  const storeCount = [...new Set(mockProducts.map((p) => p.sourceName))].length;
+  const allProducts = getAllProducts();
+  const categories = getCategories();
+  const featuredProducts = allProducts.slice(0, 6);
+  const storeCount = [...new Set(allProducts.map((p) => p.sourceName))].length;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -127,7 +129,7 @@ export default function HomePage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
             {[
-              { label: 'Products', value: `${mockProducts.length}+` },
+              { label: 'Products', value: `${allProducts.length}+` },
               { label: 'Stores', value: `${storeCount}+` },
               { label: 'Avg. Savings', value: '≤30%' },
             ].map((stat) => (

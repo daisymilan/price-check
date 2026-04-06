@@ -11,7 +11,7 @@ import PriceComparisonTable from '../components/product/PriceComparisonTable';
 import EmptyState from '../components/common/EmptyState';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { useSearch, useRecentSearches } from '../hooks/useAppHooks';
-import { mockProducts } from '../data/mockData';
+import { getAllProducts } from '../utils/dbUtils';
 import { SearchFilters } from '../types';
 import { Search, LayoutGrid, List, TrendingDown, SlidersHorizontal, X } from 'lucide-react';
 import { formatPriceWithSymbol } from '../utils/formatUtils';
@@ -26,7 +26,8 @@ export default function SearchResultsPage() {
   const initialQuery = searchParams.get('q') || '';
   const initialCategory = searchParams.get('category') || undefined;
 
-  const { filters, results, isLoading, performSearch, resetSearch } = useSearch(mockProducts);
+  const allProducts = getAllProducts();
+  const { filters, results, isLoading, performSearch, resetSearch } = useSearch(allProducts);
   const { addSearch } = useRecentSearches();
 
   useEffect(() => {
@@ -142,7 +143,7 @@ export default function SearchResultsPage() {
                 </div>
                 <div className="p-4">
                   <FilterSidebar
-                    products={mockProducts}
+                    products={allProducts}
                     filters={filters}
                     onFiltersChange={handleFiltersChange}
                     onReset={handleReset}
@@ -155,7 +156,7 @@ export default function SearchResultsPage() {
           {/* Desktop sidebar */}
           <aside className="hidden lg:block w-60 flex-shrink-0">
             <FilterSidebar
-              products={mockProducts}
+              products={allProducts}
               filters={filters}
               onFiltersChange={handleFiltersChange}
               onReset={handleReset}

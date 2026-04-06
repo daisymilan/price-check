@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Heart, Bell, Share2, MapPin, Star, ExternalLink } from 'lucide-react';
 import PriceComparisonTable from '../components/product/PriceComparisonTable';
 import EmptyState from '../components/common/EmptyState';
-import { mockProducts } from '../data/mockData';
+import { getAllProducts } from '../utils/dbUtils';
 import { ProductPrice } from '../types';
 import { formatPriceWithSymbol, getCategoryIcon, normalizeProductName, formatDate } from '../utils/formatUtils';
 import { useFavorites } from '../hooks/useAppHooks';
@@ -19,12 +19,14 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<ProductPrice[]>([]);
   const { toggleFavorite, isFav } = useFavorites();
 
+  const allProducts = getAllProducts();
+
   useEffect(() => {
-    const found = mockProducts.find((p) => p.id === id);
+    const found = allProducts.find((p) => p.id === id);
     setProduct(found || null);
 
     if (found) {
-      const related = mockProducts.filter(
+      const related = allProducts.filter(
         (p) =>
           p.id !== found.id &&
           (p.category === found.category ||
@@ -47,7 +49,7 @@ export default function ProductDetailPage() {
     );
   }
 
-  const allVariants = mockProducts.filter(
+  const allVariants = allProducts.filter(
     (p) => p.normalizedProductName === product.normalizedProductName
   );
 
