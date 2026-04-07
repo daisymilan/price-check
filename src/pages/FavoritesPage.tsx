@@ -5,14 +5,14 @@
 import { useNavigate } from 'react-router-dom';
 import { Heart, Trash2, ArrowRight, Search } from 'lucide-react';
 import { useFavorites } from '../hooks/useAppHooks';
-import { getAllProducts } from '../utils/dbUtils';
+import { useData } from '../context/DataContext';
 import EmptyState from '../components/common/EmptyState';
 import { formatPriceWithSymbol, getCategoryIcon, formatDate } from '../utils/formatUtils';
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
   const { favorites, toggleFavorite } = useFavorites();
-  const allProducts = getAllProducts();
+  const { products: allProducts } = useData();
 
   if (favorites.length === 0) {
     return (

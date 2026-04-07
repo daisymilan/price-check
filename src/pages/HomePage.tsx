@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { TrendingUp, ArrowRight, Clock, Zap, Shield, Star, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { useRecentSearches } from '../hooks/useAppHooks';
-import { getAllProducts, getCategories } from '../utils/dbUtils';
+import { useData } from '../context/DataContext';
 import { formatPriceWithSymbol } from '../utils/formatUtils';
 
 const POPULAR_SEARCHES = [
@@ -57,8 +57,7 @@ export default function HomePage() {
     handleSearch(searchQuery);
   };
 
-  const allProducts = getAllProducts();
-  const categories = getCategories();
+  const { products: allProducts, categories } = useData();
   const featuredProducts = allProducts.slice(0, 6);
   const storeCount = [...new Set(allProducts.map((p) => p.sourceName))].length;
 

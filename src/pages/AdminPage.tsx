@@ -3,7 +3,7 @@
  */
 
 import { Database, RefreshCw, CheckCircle, AlertTriangle, XCircle, Clock, Package, ShoppingBag, Activity } from 'lucide-react';
-import { getDbMetadata, getDbLastScraped, isDbPopulated, getAllProducts } from '../utils/dbUtils';
+import { useData } from '../context/DataContext';
 import { formatDate } from '../utils/formatUtils';
 
 function StatCard({ icon: Icon, label, value, sub }: { icon: React.ElementType; label: string; value: string | number; sub?: string }) {
@@ -36,10 +36,7 @@ function SourceBadge({ source }: { source: 'live' | 'seed' }) {
 }
 
 export default function AdminPage() {
-  const meta = getDbMetadata();
-  const lastScraped = getDbLastScraped();
-  const populated = isDbPopulated();
-  const products = getAllProducts();
+  const { products, metadata: meta, lastScraped, isDbLoaded: populated } = useData();
 
   const uniqueStores = [...new Set(products.map((p) => p.sourceName))];
   const uniqueCategories = [...new Set(products.map((p) => p.category))];

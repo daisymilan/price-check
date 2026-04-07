@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Heart, Bell, Share2, MapPin, Star, ExternalLink } from 'lucide-react';
 import PriceComparisonTable from '../components/product/PriceComparisonTable';
 import EmptyState from '../components/common/EmptyState';
-import { getAllProducts } from '../utils/dbUtils';
+import { useData } from '../context/DataContext';
 import { ProductPrice } from '../types';
 import { formatPriceWithSymbol, getCategoryIcon, normalizeProductName, formatDate } from '../utils/formatUtils';
 import { useFavorites } from '../hooks/useAppHooks';
@@ -19,7 +19,7 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<ProductPrice[]>([]);
   const { toggleFavorite, isFav } = useFavorites();
 
-  const allProducts = getAllProducts();
+  const { products: allProducts } = useData();
 
   useEffect(() => {
     const found = allProducts.find((p) => p.id === id);

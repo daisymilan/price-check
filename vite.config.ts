@@ -8,4 +8,15 @@ export default defineConfig({
     port: 3000,
     open: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('database.json')) return 'db-data';
+          if (id.includes('mockData')) return 'mock-data';
+          if (id.includes('node_modules')) return 'vendor';
+        },
+      },
+    },
+  },
 })

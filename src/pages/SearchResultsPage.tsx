@@ -11,22 +11,25 @@ import PriceComparisonTable from '../components/product/PriceComparisonTable';
 import EmptyState from '../components/common/EmptyState';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { useSearch, useRecentSearches } from '../hooks/useAppHooks';
-import { getAllProducts } from '../utils/dbUtils';
+import { useData } from '../context/DataContext';
 import { SearchFilters } from '../types';
 import { Search, LayoutGrid, List, TrendingDown, SlidersHorizontal, X } from 'lucide-react';
 import { formatPriceWithSymbol } from '../utils/formatUtils';
+
+const PAGE_SIZE = 48;
 
 export default function SearchResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
   const searchParams = new URLSearchParams(location.search);
   const initialQuery = searchParams.get('q') || '';
   const initialCategory = searchParams.get('category') || undefined;
 
-  const allProducts = getAllProducts();
+  const { products: allProducts } = useData();
   const { filters, results, isLoading, performSearch, resetSearch } = useSearch(allProducts);
   const { addSearch } = useRecentSearches();
 
@@ -44,13 +47,16 @@ export default function SearchResultsPage() {
     const f: SearchFilters = { ...filters, query };
     performSearch(f);
     if (query) addSearch(query);
+    setPage(1);
     navigate(`/search?q=${encodeURIComponent(query)}`, { replace: true });
   };
 
-  const handleFiltersChange = (newFilters: SearchFilters) => performSearch(newFilters);
-  const handleReset = () => { resetSearch(); navigate('/search'); };
+  const handleFiltersChange = (newFilters: SearchFilters) => { performSearch(newFilters); setPage(1); };
+  const handleReset = () => { resetSearch(); setPage(1); navigate('/search'); };
 
   const hasQuery = !!filters.query || !!filters.category;
+  const pagedProducts = results.products.slice(0, page * PAGE_SIZE);
+  const hasMore = pagedProducts.length < results.products.length;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -208,7 +214,7 @@ export default function SearchResultsPage() {
                 {/* Grid view */}
                 {viewMode === 'grid' && (
                   <div className="product-grid">
-                    {results.products.map((p) => (
+                    {pagedProducts.map((p) => (
                       <ProductCard
                         key={p.id}
                         product={p}
@@ -221,14 +227,24 @@ export default function SearchResultsPage() {
                 {/* Table view */}
                 {viewMode === 'table' && (
                   <PriceComparisonTable
-                    products={results.products}
+                    products={pagedProducts}
                     cheapest={results.cheapest}
                   />
                 )}
 
-                <p className="text-center text-xs text-gray-400 dark:text-gray-500 pt-2">
-                  Showing {results.products.length} of {results.total} results
-                </p>
+                <div className="flex flex-col items-center gap-3 pt-2">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    Showing {pagedProducts.length} of {results.total} results
+                  </p>
+                  {hasMore && (
+                    <button
+                      onClick={() => setPage((p) => p + 1)}
+                      className="px-6 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      Load more ({results.total - pagedProducts.length} remaining)
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </main>
