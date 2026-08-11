@@ -35,8 +35,8 @@ export async function scrapeCebuHome(): Promise<ScrapedProduct[]> {
     const $ = loadHtml(html);
     const results: ScrapedProduct[] = [];
 
-    $('li.product, .product-item').each((_, el) => {
-      const name = $(el).find('h2, .woocommerce-loop-product__title').first().text().trim();
+    $('.product-col, li.product, .product-item').each((_, el) => {
+      const name = $(el).find('.post-title, h2, h3, .woocommerce-loop-product__title').first().text().trim();
       const priceText = $(el).find('.price, .woocommerce-Price-amount').first().text().trim();
       const price = parsePrice(priceText);
       const href = $(el).find('a').first().attr('href') ?? '';

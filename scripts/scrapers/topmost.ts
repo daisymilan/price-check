@@ -13,6 +13,15 @@ const STORE: StoreMeta = {
   defaultCategory: 'Hardware',
 };
 
+// Site is WooCommerce, not Shopify — /collections/all is a genuine 404 (real
+// title: "Page not found"). Verified real category pages below return 200
+// with actual li.product markup.
+const CATEGORY_PAGES = [
+  '/product-category/concreting-masonry/',
+  '/product-category/tools-equipments/',
+  '/product-category/electrical-fixtures-and-devices/',
+];
+
 const SEED: ScrapedProduct[] = [
   { name: 'Makita 9556HN Angle Grinder 4 inch 840W', price: 4180, store: STORE.name, sourceUrl: STORE.url, productUrl: STORE.url + '/products/makita-9556hn', image: '', category: 'Tools & Equipment', brand: 'Makita', unit: 'piece', location: STORE.location, availability: 'in_stock', trustRating: STORE.trustRating },
   { name: 'MSA V-Gard Hard Hat White', price: 820, store: STORE.name, sourceUrl: STORE.url, productUrl: STORE.url + '/products/msa-hardhat', image: '', category: 'Safety Equipment', brand: 'MSA', unit: 'piece', location: STORE.location, availability: 'in_stock', trustRating: STORE.trustRating },
@@ -30,22 +39,28 @@ export async function scrapeTopmost(): Promise<ScrapedProduct[]> {
     const shopify = await fetchShopifyProducts(STORE.url);
     if (shopify.length > 0) return shopifyToScraped(shopify, STORE);
 
-    const html = await fetchPage(STORE.url + '/collections/all');
-    const $ = loadHtml(html);
     const results: ScrapedProduct[] = [];
 
-    $('.product-item, .product-card').each((_, el) => {
-      const name = $(el).find('h2, h3, .product-title').first().text().trim();
-      const priceText = $(el).find('.price, [class*="price"]').first().text().trim();
-      const price = parsePrice(priceText);
-      const href = $(el).find('a').first().attr('href') ?? '';
-      const img = $(el).find('img').first().attr('src') ?? '';
-      if (name && price > 0) {
-        results.push({ name, price, store: STORE.name, sourceUrl: STORE.url, productUrl: href.startsWith('http') ? href : STORE.url + href, image: img, category: STORE.defaultCategory, brand: 'Unknown', unit: 'piece', location: STORE.location, availability: 'in_stock', trustRating: STORE.trustRating });
-      }
-    });
+    for (const catPage of CATEGORY_PAGES) {
+      const html = await fetchPage(STORE.url + catPage);
+      const $ = loadHtml(html);
 
-    if (results.length > 0) return results;
+      $('li.product').each((_, el) => {
+        const name = $(el).find('h2, h3, .product-title').first().text().trim();
+        const priceText = $(el).find('.price, [class*="price"]').first().text().trim();
+        const price = parsePrice(priceText);
+        const href = $(el).find('a').first().attr('href') ?? '';
+        const img = $(el).find('img').first().attr('src') ?? '';
+        if (name && price > 0) {
+          results.push({ name, price, store: STORE.name, sourceUrl: STORE.url, productUrl: href.startsWith('http') ? href : STORE.url + href, image: img, category: STORE.defaultCategory, brand: 'Unknown', unit: 'piece', location: STORE.location, availability: 'in_stock', trustRating: STORE.trustRating });
+        }
+      });
+    }
+
+    if (results.length > 0) {
+      console.log(`[${STORE.name}] Live: ${results.length} products`);
+      return results;
+    }
     throw new Error('No products parsed');
   } catch (err) {
     console.warn(`[${STORE.name}] Using seed: ${err}`);

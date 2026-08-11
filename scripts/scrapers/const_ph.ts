@@ -29,13 +29,13 @@ export async function scrapeConstPh(): Promise<ScrapedProduct[]> {
   console.log(`[${STORE.name}] Attempting live scrape...`);
 
   try {
-    const html = await fetchPage(STORE.url + '/products');
+    const html = await fetchPage(STORE.url + '/shop/');
     const $ = loadHtml(html);
     const results: ScrapedProduct[] = [];
 
-    $('[class*="product"], .product-card, .item').each((_, el) => {
-      const name = $(el).find('[class*="name"], [class*="title"], h2, h3').first().text().trim();
-      const priceText = $(el).find('[class*="price"]').first().text().trim();
+    $('li.product').each((_, el) => {
+      const name = $(el).find('.woocommerce-loop-product__title, h2, h3').first().text().trim();
+      const priceText = $(el).find('.price, .woocommerce-Price-amount').first().text().trim();
       const price = parsePrice(priceText);
       const href = $(el).find('a').first().attr('href') ?? '';
       const img = $(el).find('img').first().attr('src') ?? '';

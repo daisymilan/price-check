@@ -96,6 +96,19 @@ interface ShopifyProduct {
   images: ShopifyImage[];
 }
 
+// Some Shopify catalogs use a repeating-9s value (999999, 99999999, ...) as a
+// "price not set" placeholder instead of leaving the field blank — Shopify's
+// `available: true` does NOT distinguish these from real prices (confirmed
+// against khmtools.com.ph's live feed, where both share available: true).
+// Matched only at 6+ digits: shorter repunits like 999 or 9999 are common
+// legitimate charm pricing (e.g. felcostore.ph genuinely sells a ₱999 fan),
+// but no real product is priced at exactly ₱999,999.00 to the peso.
+const SENTINEL_PRICE_PATTERN = /^9{6,}$/;
+
+function isSentinelPrice(price: number): boolean {
+  return SENTINEL_PRICE_PATTERN.test(String(Math.trunc(price)));
+}
+
 /**
  * Convert Shopify product objects to ScrapedProduct format.
  */
@@ -110,7 +123,9 @@ export function shopifyToScraped(
     if (!variant) continue;
 
     const price = parseFloat(variant.price);
-    if (isNaN(price) || price <= 0) continue;
+    // Excluded, not repriced: a placeholder is not a real offer, and we'd
+    // rather drop it from price comparison than show a fabricated number.
+    if (isNaN(price) || price <= 0 || isSentinelPrice(price)) continue;
 
     result.push({
       name: p.title,

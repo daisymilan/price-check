@@ -56,6 +56,13 @@ export interface ScrapeReport {
   durationMs: number;
   error?: string;
   timestamp: string;
+  // Health status derived from source/productsFound — additive, does not
+  // replace `source`/`productsFound` above. See scripts/runScrapers.ts.
+  // LIVE_PARTIAL is not computed yet (needs a historical per-store baseline
+  // the current schema doesn't retain across runs) — only FAILED/FALLBACK/LIVE.
+  status: 'LIVE_SUCCESS' | 'LIVE_PARTIAL' | 'FALLBACK' | 'FAILED';
+  liveProducts: number;
+  fallbackProducts: number;
 }
 
 // Database metadata

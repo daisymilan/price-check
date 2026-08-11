@@ -91,6 +91,8 @@ async function runScrapers(): Promise<void> {
     }
 
     const durationMs = Date.now() - t0;
+    const status: ScrapeReport['status'] =
+      products.length === 0 ? 'FAILED' : source === 'live' ? 'LIVE_SUCCESS' : 'FALLBACK';
     reports.push({
       store: scraper.name,
       productsFound: products.length,
@@ -98,6 +100,9 @@ async function runScrapers(): Promise<void> {
       durationMs,
       error,
       timestamp: new Date().toISOString(),
+      status,
+      liveProducts: source === 'live' ? products.length : 0,
+      fallbackProducts: source === 'seed' ? products.length : 0,
     });
 
     allProducts.push(...products);

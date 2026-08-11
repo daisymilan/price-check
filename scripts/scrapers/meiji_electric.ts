@@ -15,11 +15,11 @@ const STORE: StoreMeta = {
 };
 
 const CATEGORY_PAGES = [
-  '/product-category/avr-ups/',
-  '/product-category/circuit-breakers/',
-  '/product-category/wiring-devices/',
-  '/product-category/cables-wires/',
-  '/product-category/lighting/',
+  '/product-category/avr/',
+  '/product-category/miniature-circuit-breakers/',
+  '/product-category/adaptors/',
+  '/product-category/residual-current-circuit-breaker/',
+  '/product-category/step-down-transformers/',
 ];
 
 const SEED: ScrapedProduct[] = [
