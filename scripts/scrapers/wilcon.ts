@@ -1,6 +1,10 @@
 /**
- * Wilcon Depot scraper — https://www.wilcon.com.ph
- * Strategy: HTML scraping of category pages. Falls back to seed on failure.
+ * Wilcon Depot scraper — https://shop.wilcon.com.ph
+ * Wilcon migrated its storefront off www.wilcon.com.ph to a Magento 2
+ * platform at shop.wilcon.com.ph (confirmed via ~50 "Magento_" module
+ * references, data-mage-init attributes, and catalog/product URL paths).
+ * Category pages are fully server-rendered (classic Magento Luma theme) —
+ * no browser rendering needed, plain HTML fetch + parse is sufficient.
  */
 
 import { ScrapedProduct } from '../types.js';
@@ -8,19 +12,14 @@ import { fetchPage, loadHtml, parsePrice, StoreMeta } from './base.js';
 
 const STORE: StoreMeta = {
   name: 'Wilcon Depot',
-  url: 'https://www.wilcon.com.ph',
+  url: 'https://shop.wilcon.com.ph',
   location: 'Metro Manila',
   trustRating: 4.8,
   defaultCategory: 'Hardware',
 };
 
-const CATEGORY_SLUGS = [
-  '/category/construction-materials',
-  '/category/plumbing',
-  '/category/electrical',
-  '/category/paint',
-  '/category/tools',
-];
+// Verified live: returns 200 with real, server-rendered product-item markup.
+const CATEGORY_PAGES = ['/products/building-materials.html'];
 
 const SEED: ScrapedProduct[] = [
   { name: 'Boysen Latex Flat Paint White 1 Gallon', price: 1350, store: STORE.name, sourceUrl: STORE.url, productUrl: STORE.url + '/paint', image: '', category: 'Paint & Coating', brand: 'Boysen', unit: 'gallon', size: '1 gallon', location: STORE.location, availability: 'in_stock', trustRating: STORE.trustRating },
@@ -51,29 +50,36 @@ export async function scrapeWilcon(): Promise<ScrapedProduct[]> {
   try {
     const results: ScrapedProduct[] = [];
 
-    for (const slug of CATEGORY_SLUGS.slice(0, 2)) {
-      const html = await fetchPage(STORE.url + slug);
+    for (const catPage of CATEGORY_PAGES) {
+      const html = await fetchPage(STORE.url + catPage);
       const $ = loadHtml(html);
 
-      // Common Wilcon product card selectors — update if site changes
-      $('.product-item, .product-card, [class*="product"]').each((_, el) => {
-        const name = $(el).find('h2, h3, .product-title, .product-name').first().text().trim();
-        const priceText = $(el).find('.price, .product-price, [class*="price"]').first().text().trim();
-        const href = $(el).find('a').first().attr('href') ?? '';
-        const img = $(el).find('img').first().attr('src') ?? '';
+      $('li.product-item').each((_, el) => {
+        const nameLink = $(el).find('a.product-item-name').first();
+        const name = nameLink.text().trim();
+        const productUrl = nameLink.attr('href') ?? '';
 
-        const price = parsePrice(priceText);
-        if (name && price > 0) {
+        const priceAttr = $(el).find('[data-price-amount]').first().attr('data-price-amount');
+        const price = priceAttr ? parseFloat(priceAttr) : parsePrice($(el).find('.price').first().text());
+
+        // Product images are lazy-loaded — the real photo lives in data-src;
+        // src holds a generic loading placeholder until JS swaps it in.
+        const img = $(el).find('img.product-image-photo').first();
+        const image = img.attr('data-src') || img.attr('src') || '';
+
+        const unit = $(el).find('.unit-text').first().text().replace('/', '').trim().toLowerCase();
+
+        if (name && price > 0 && productUrl) {
           results.push({
             name,
             price,
             store: STORE.name,
             sourceUrl: STORE.url,
-            productUrl: href.startsWith('http') ? href : STORE.url + href,
-            image: img.startsWith('http') ? img : img ? STORE.url + img : '',
+            productUrl,
+            image,
             category: STORE.defaultCategory,
             brand: 'Unknown',
-            unit: 'piece',
+            unit: unit || 'piece',
             location: STORE.location,
             availability: 'in_stock',
             trustRating: STORE.trustRating,
