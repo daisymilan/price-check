@@ -1,9 +1,14 @@
 /**
  * BQ Builderware scraper — https://www.bqbuilderware.com
+ * Not Shopify (confirmed: /products.json 500s persistently, along with
+ * /sitemap.xml — the entire Shopify layer appears dead). The live site is
+ * actually a custom Laravel/Vue storefront with real category pages
+ * (/tools-and-hardware, etc.) carrying genuine products, PHP prices, and
+ * working cart/checkout — verified before writing this.
  */
 
 import { ScrapedProduct } from '../types.js';
-import { fetchShopifyProducts, shopifyToScraped, fetchPage, loadHtml, parsePrice, StoreMeta } from './base.js';
+import { fetchPage, loadHtml, parsePrice, StoreMeta } from './base.js';
 
 const STORE: StoreMeta = {
   name: 'BQ Builderware',
@@ -12,6 +17,9 @@ const STORE: StoreMeta = {
   trustRating: 4.5,
   defaultCategory: 'Hardware',
 };
+
+// Verified live: returns 200 with real product-card markup and PHP prices.
+const CATEGORY_PAGES = ['/tools-and-hardware'];
 
 const SEED: ScrapedProduct[] = [
   { name: 'ABC Tile Adhesive Heavy Duty 25kg', price: 495, store: STORE.name, sourceUrl: STORE.url, productUrl: STORE.url + '/products/abc-tile-adhesive', image: '', category: 'Cement & Concrete', brand: 'ABC', unit: 'bag', size: '25 kg', location: STORE.location, availability: 'in_stock', trustRating: STORE.trustRating },
@@ -32,32 +40,46 @@ const SEED: ScrapedProduct[] = [
 ];
 
 export async function scrapeBQBuilderware(): Promise<ScrapedProduct[]> {
-  console.log(`[${STORE.name}] Attempting Shopify + HTML scrape...`);
+  console.log(`[${STORE.name}] Attempting live scrape...`);
 
   try {
-    const shopify = await fetchShopifyProducts(STORE.url);
-    if (shopify.length > 0) {
-      const results = shopifyToScraped(shopify, STORE);
-      console.log(`[${STORE.name}] Shopify: ${results.length} products`);
-      return results;
-    }
-
-    const html = await fetchPage(STORE.url + '/collections/all');
-    const $ = loadHtml(html);
     const results: ScrapedProduct[] = [];
 
-    $('.product-item, .product-card').each((_, el) => {
-      const name = $(el).find('h2, h3, .product-title').first().text().trim();
-      const priceText = $(el).find('.price, [class*="price"]').first().text().trim();
-      const price = parsePrice(priceText);
-      const href = $(el).find('a').first().attr('href') ?? '';
-      const img = $(el).find('img').first().attr('src') ?? '';
-      if (name && price > 0) {
-        results.push({ name, price, store: STORE.name, sourceUrl: STORE.url, productUrl: href.startsWith('http') ? href : STORE.url + href, image: img, category: STORE.defaultCategory, brand: 'Unknown', unit: 'piece', location: STORE.location, availability: 'in_stock', trustRating: STORE.trustRating });
-      }
-    });
+    for (const catPage of CATEGORY_PAGES) {
+      const html = await fetchPage(STORE.url + catPage);
+      const $ = loadHtml(html);
 
-    if (results.length > 0) return results;
+      $('.featured-products-card').each((_, el) => {
+        const name = $(el).find('.featured-products-card-title').first().text().trim();
+        const priceText = $(el).find('.list-group-item b').first().text().trim();
+        const price = parsePrice(priceText);
+        const href = $(el).find('a').first().attr('href') ?? '';
+        const img = $(el).find('img.featured-products-card-img-top').first().attr('src') ?? '';
+        const brand = $(el).find('.featured-products-card-text').first().text().trim();
+
+        if (name && price > 0 && href) {
+          results.push({
+            name,
+            price,
+            store: STORE.name,
+            sourceUrl: STORE.url,
+            productUrl: href.startsWith('http') ? href : STORE.url + href,
+            image: img,
+            category: STORE.defaultCategory,
+            brand: brand || 'Unknown',
+            unit: 'piece',
+            location: STORE.location,
+            availability: 'in_stock',
+            trustRating: STORE.trustRating,
+          });
+        }
+      });
+    }
+
+    if (results.length > 0) {
+      console.log(`[${STORE.name}] Live: ${results.length} products`);
+      return results;
+    }
     throw new Error('No products parsed');
   } catch (err) {
     console.warn(`[${STORE.name}] Using seed: ${err}`);
