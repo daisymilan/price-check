@@ -225,6 +225,55 @@ export function printReport(db: ProductDB, reports: ScrapeReport[]): void {
   console.log('═'.repeat(60) + '\n');
 }
 
+/**
+ * Manually-maintained investigation notes — NOT auto-detected. Each entry
+ * reflects a specific human investigation (checking sitemaps, nav links,
+ * catalog identity, WAF fingerprints, etc.) into why a store is currently
+ * non-live. There is no reliable way to infer ACCESS_BLOCKED vs
+ * WRONG_CATALOG vs NO_PUBLIC_CATALOG vs EXTERNAL_FAILURE from an HTTP
+ * status code alone, so this is deliberately a static lookup, not runtime
+ * logic. It affects display only — never live/fallback/safety decisions.
+ * Update it (or remove an entry) when a store's real-world status changes.
+ */
+const KNOWN_STORE_ISSUES: Record<string, string> = {
+  'CW Home Depot': 'ACCESS_BLOCKED',
+  'Ace Hardware Philippines': 'WRONG_CATALOG',
+  AllHome: 'ACCESS_BLOCKED',
+  Handyman: 'EXTERNAL_FAILURE',
+  'MR. DIY Philippines': 'NO_PUBLIC_CATALOG',
+  'Shoppable PH': 'WRONG_CATALOG',
+};
+
+/**
+ * Print a concise LIVE/NOT-LIVE health summary — the goal is that tomorrow's
+ * automated run is understandable without reading raw logs. Known-issue
+ * labels come from KNOWN_STORE_ISSUES (see above); anything not in that
+ * table falls back to its live-detected status/error, so a newly-broken
+ * store still shows *something* useful instead of silently having no label.
+ */
+export function printHealthReport(reports: ScrapeReport[]): void {
+  const live = reports.filter((r) => r.status === 'LIVE_SUCCESS');
+  const notLive = reports.filter((r) => r.status !== 'LIVE_SUCCESS');
+  const pct = reports.length > 0 ? Math.round((live.length / reports.length) * 100) : 0;
+
+  console.log('\nPHILIPPINE HARDWARE SCRAPER HEALTH');
+  console.log('='.repeat(50));
+  console.log(`\nLIVE: ${live.length}/${reports.length} (${pct}%)\n`);
+
+  console.log('LIVE');
+  for (const r of live) {
+    console.log(`✓ ${r.store.padEnd(26)} ${r.liveProducts.toLocaleString().padStart(8)}`);
+  }
+
+  console.log('\nNOT LIVE');
+  for (const r of notLive) {
+    const label = KNOWN_STORE_ISSUES[r.store] ?? (r.status === 'FAILED' ? 'FAILED' : r.error ?? 'FALLBACK');
+    console.log(`! ${r.store.padEnd(26)} ${label}`);
+  }
+
+  console.log(`\nCoverage: ${live.length}/${reports.length} (${pct}%)\n`);
+}
+
 function slugify(s: string): string {
   return s
     .toLowerCase()

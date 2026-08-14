@@ -8,7 +8,7 @@
  */
 
 import { ScrapedProduct, ScrapeReport } from './types.js';
-import { loadDB, saveDB, mergeScrapedProducts, checkDataSafety, printReport } from './db.js';
+import { loadDB, saveDB, mergeScrapedProducts, checkDataSafety, printReport, printHealthReport } from './db.js';
 import { sleep } from './scrapers/base.js';
 
 // Import all scrapers
@@ -61,6 +61,30 @@ const SCRAPERS: ScraperDef[] = [
 
 const isDryRun = process.argv.includes('--dry-run');
 
+/**
+ * Every scraper catches its own errors internally and logs them via
+ * console.warn before returning seed data — so the real failure reason
+ * (HTTP 403, 500, "No products parsed", ...) never reaches this
+ * orchestrator's own try/catch, and ScrapeReport.error was always empty.
+ * Capturing console.warn for the duration of one scraper's run recovers
+ * that reason without touching any of the 18 scraper files. Scrapers run
+ * sequentially (awaited one at a time), so there's no cross-store overlap.
+ */
+async function runWithCapturedWarnings<T>(fn: () => Promise<T>): Promise<{ result: T; lastWarning?: string }> {
+  const warnings: string[] = [];
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    warnings.push(args.map(String).join(' '));
+    originalWarn(...args);
+  };
+  try {
+    const result = await fn();
+    return { result, lastWarning: warnings.at(-1) };
+  } finally {
+    console.warn = originalWarn;
+  }
+}
+
 async function runScrapers(): Promise<void> {
   const startTime = Date.now();
   const allProducts: ScrapedProduct[] = [];
@@ -81,10 +105,12 @@ async function runScrapers(): Promise<void> {
     let error: string | undefined;
 
     try {
-      products = await scraper.fn();
+      const { result, lastWarning } = await runWithCapturedWarnings(scraper.fn);
+      products = result;
       // Heuristic: if ALL products have empty images, it's likely seed data
       const hasRealImages = products.some((p) => p.image.startsWith('http'));
       source = hasRealImages ? 'live' : 'seed';
+      if (source === 'seed') error = lastWarning;
     } catch (err) {
       error = String(err);
       products = [];
@@ -120,6 +146,7 @@ async function runScrapers(): Promise<void> {
     for (const r of reports) {
       console.log(`  ${r.store}: ${r.productsFound} (${r.source})`);
     }
+    printHealthReport(reports);
     return;
   }
 
@@ -139,6 +166,7 @@ async function runScrapers(): Promise<void> {
   saveDB(newDB);
 
   printReport(newDB, reports);
+  printHealthReport(reports);
   console.log(`💾  Database saved to src/data/database.json`);
 }
 
